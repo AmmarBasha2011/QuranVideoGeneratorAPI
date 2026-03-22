@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Video, Settings, Play, Download, Loader2, Music, BookOpen } from 'lucide-react';
 
@@ -12,9 +12,9 @@ function App() {
   const [selectedSurah, setSelectedSurah] = useState(1);
   const [startAyah, setStartAyah] = useState(1);
   const [endAyah, setEndAyah] = useState(7);
-  const [resolution, setResolution] = useState('1080x1920');
+  const [resolution] = useState('1080x1920');
   const [fps, setFps] = useState(30);
-  const [bgColor, setBgColor] = useState('#000000');
+  const [bgColor] = useState('#000000');
   const [textColor, setTextColor] = useState('#ffffff');
   
   const [jobId, setJobId] = useState<string | null>(null);
