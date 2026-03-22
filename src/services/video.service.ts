@@ -27,7 +27,18 @@ interface VideoRequest {
 }
 
 const COLORS = ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#fffbeb', '#f0f9ff'];
-const FONT_PATH = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+// Try to find a font that actually exists or use a generic one if possible
+const FONT_PATH = fs.existsSync('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf') 
+    ? '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' 
+    : '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf';
+
+// Helper to escape FFmpeg filter text
+const escapeFFmpegText = (text: string) => {
+    return text
+        .replace(/\\/g, '\\\\\\\\')
+        .replace(/'/g, "'\\\\\\''")
+        .replace(/:/g, '\\\\:');
+};
 
 export const processVideo = async (
   jobId: string,
@@ -161,7 +172,7 @@ export const processVideo = async (
           {
             filter: 'drawtext',
             options: {
-              text: `${surahName.toUpperCase()}`,
+              text: escapeFFmpegText(surahName.toUpperCase()),
               fontsize: 60,
               fontcolor: textColor,
               fontfile: FONT_PATH,
@@ -175,7 +186,7 @@ export const processVideo = async (
           {
             filter: 'drawtext',
             options: {
-              text: displayLines,
+              text: escapeFFmpegText(displayLines),
               fontsize: 40,
               fontcolor: 'white',
               fontfile: FONT_PATH,
@@ -190,7 +201,7 @@ export const processVideo = async (
           {
             filter: 'drawtext',
             options: {
-              text: `Reciter: ${reciterName}`,
+              text: escapeFFmpegText(`Reciter: ${reciterName}`),
               fontsize: 30,
               fontcolor: textColor,
               fontfile: FONT_PATH,
