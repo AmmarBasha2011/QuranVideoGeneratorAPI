@@ -18,8 +18,11 @@ app.use(express.json());
 // Ensure directories exist
 const outputDir = path.join(__dirname, '../outputs');
 const tempDir = path.join(__dirname, '../temp');
-if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
-if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+const bgDir = path.join(__dirname, '../assets/backgrounds');
+
+if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+if (!fs.existsSync(bgDir)) fs.mkdirSync(bgDir, { recursive: true });
 
 // Static files
 app.use('/outputs', express.static(outputDir));
@@ -91,6 +94,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Routes
 app.use('/api/v1/video', videoRoutes);
 app.use('/api/v1/quran', quranRoutes);
+
 // Serve frontend in production
 const clientDist = path.join(__dirname, '../client/dist');
 if (fs.existsSync(clientDist)) {
@@ -103,7 +107,6 @@ if (fs.existsSync(clientDist)) {
 }
 
 app.listen(PORT, () => {
-...
   console.log(`Server is running on port ${PORT}`);
   console.log(`Docs available at http://localhost:${PORT}/docs`);
 });
