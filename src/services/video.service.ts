@@ -3,12 +3,10 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import ffprobeStatic from 'ffprobe-static';
-import ffmpegStatic from 'ffmpeg-static';
 
+// No longer using ffmpeg-static as it lacks drawtext support in some builds
+// Using system-wide ffmpeg installed via Docker/apt-get
 ffmpeg.setFfprobePath(ffprobeStatic.path);
-if (ffmpegStatic) {
-  ffmpeg.setFfmpegPath(ffmpegStatic);
-}
 
 interface VideoRequest {
   reciter: string;
@@ -27,17 +25,29 @@ interface VideoRequest {
 }
 
 const COLORS = ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#fffbeb', '#f0f9ff'];
-// Try to find a font that actually exists or use a generic one if possible
-const FONT_PATH = fs.existsSync('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf') 
-    ? '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' 
-    : '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf';
 
-// Helper to escape FFmpeg filter text
+// Updated font paths for typical linux/debian installs
+const FONT_PATHS = [
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
+];
+
+const getFontPath = () => {
+    for (const p of FONT_PATHS) {
+        if (fs.existsSync(p)) return p;
+    }
+    return 'DejaVu Sans'; // Fallback to system name
+};
+
+const FONT_PATH = getFontPath();
+
+// Helper to escape FFmpeg filter text (colons, single quotes, backslashes)
 const escapeFFmpegText = (text: string) => {
     return text
-        .replace(/\\/g, '\\\\\\\\')
-        .replace(/'/g, "'\\\\\\''")
-        .replace(/:/g, '\\\\:');
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "'\\''")
+        .replace(/:/g, '\\:');
 };
 
 export const processVideo = async (
