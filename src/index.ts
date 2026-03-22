@@ -99,9 +99,12 @@ app.use('/api/v1/quran', quranRoutes);
 const clientDist = path.join(__dirname, '../client/dist');
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
-  app.get('/:path*', (req, res) => {
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/docs') && !req.path.startsWith('/outputs')) {
+  // Catch-all middleware for SPA
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/docs') && !req.path.startsWith('/outputs')) {
       res.sendFile(path.join(clientDist, 'index.html'));
+    } else {
+      next();
     }
   });
 }
