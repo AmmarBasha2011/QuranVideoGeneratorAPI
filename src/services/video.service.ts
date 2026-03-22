@@ -4,8 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import ffprobeStatic from 'ffprobe-static';
 
-// No longer using ffmpeg-static as it lacks drawtext support in some builds
-// Using system-wide ffmpeg installed via Docker/apt-get
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 interface VideoRequest {
@@ -26,7 +24,6 @@ interface VideoRequest {
 
 const COLORS = ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#fffbeb', '#f0f9ff'];
 
-// Updated font paths for typical linux/debian installs
 const FONT_PATHS = [
     '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
     '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
@@ -37,17 +34,18 @@ const getFontPath = () => {
     for (const p of FONT_PATHS) {
         if (fs.existsSync(p)) return p;
     }
-    return 'DejaVu Sans'; // Fallback to system name
+    return ''; 
 };
 
 const FONT_PATH = getFontPath();
 
-// Helper to escape FFmpeg filter text (colons, single quotes, backslashes)
+// Very strict escaping for FFmpeg drawtext
 const escapeFFmpegText = (text: string) => {
     return text
         .replace(/\\/g, '\\\\')
-        .replace(/'/g, "'\\''")
-        .replace(/:/g, '\\:');
+        .replace(/'/g, "'\\\\''")
+        .replace(/:/g, '\\\\:')
+        .replace(/%/g, '\\\\%');
 };
 
 export const processVideo = async (
@@ -75,7 +73,6 @@ export const processVideo = async (
 
   try {
     onProgress(5);
-    // 1. Download Audio
     const audioFiles: string[] = [];
     for (let i = startAyah; i <= endAyah; i++) {
       const surahStr = surah.toString().padStart(3, '0');
@@ -94,7 +91,6 @@ export const processVideo = async (
     }
 
     onProgress(20);
-    // 2. Fetch English Translations
     let fullEnglishText = "";
     for (let i = startAyah; i <= endAyah; i++) {
       try {
@@ -109,7 +105,6 @@ export const processVideo = async (
     }
 
     onProgress(35);
-    // 3. Concatenate Audio
     const concatenatedAudio = path.join(tempDir, 'full_audio.mp3');
     await new Promise((resolve, reject) => {
       const command = ffmpeg();
@@ -119,7 +114,6 @@ export const processVideo = async (
         .mergeToFile(concatenatedAudio, tempDir);
     });
 
-    // 4. Get total duration
     let totalDuration = 0;
     await new Promise((resolve) => {
       ffmpeg.ffprobe(concatenatedAudio, (err, metadata) => {
@@ -185,7 +179,7 @@ export const processVideo = async (
               text: escapeFFmpegText(surahName.toUpperCase()),
               fontsize: 60,
               fontcolor: textColor,
-              fontfile: FONT_PATH,
+              ...(FONT_PATH ? { fontfile: FONT_PATH } : {}),
               x: '(w-text_w)/2',
               y: 'h/8',
               shadowcolor: 'black@0.8',
@@ -199,7 +193,7 @@ export const processVideo = async (
               text: escapeFFmpegText(displayLines),
               fontsize: 40,
               fontcolor: 'white',
-              fontfile: FONT_PATH,
+              ...(FONT_PATH ? { fontfile: FONT_PATH } : {}),
               x: '(w-text_w)/2',
               y: '(h-text_h)/2',
               line_spacing: 10,
@@ -214,7 +208,7 @@ export const processVideo = async (
               text: escapeFFmpegText(`Reciter: ${reciterName}`),
               fontsize: 30,
               fontcolor: textColor,
-              fontfile: FONT_PATH,
+              ...(FONT_PATH ? { fontfile: FONT_PATH } : {}),
               x: '(w-text_w)/2',
               y: 'h - h/8',
               alpha: 0.8
