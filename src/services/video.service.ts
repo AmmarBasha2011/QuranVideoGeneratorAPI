@@ -3,8 +3,12 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import ffprobeStatic from 'ffprobe-static';
+import ffmpegStatic from 'ffmpeg-static';
 
 ffmpeg.setFfprobePath(ffprobeStatic.path);
+if (ffmpegStatic) {
+  ffmpeg.setFfmpegPath(ffmpegStatic);
+}
 
 interface VideoRequest {
   reciter: string;
