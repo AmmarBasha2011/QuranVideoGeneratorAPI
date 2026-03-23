@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 import { processVideo } from '../services/video.service';
 
 const jobs: Record<string, { status: string; progress: number; downloadUrl?: string; error?: string }> = {};
@@ -71,4 +73,38 @@ export const getVideoStatus = (req: Request, res: Response) => {
   }
 
   res.json(job);
+};
+
+export const deleteVideo = (req: Request, res: Response) => {
+  const { jobId, filePath } = req.body;
+
+  if (!jobId && !filePath) {
+    return res.status(400).json({ error: 'JobID or filePath is required' });
+  }
+
+  let filename: string;
+  if (jobId) {
+    filename = `${jobId}.mp4`;
+  } else {
+    filename = path.basename(filePath);
+  }
+
+  const outputPath = path.join(__dirname, '../../outputs', filename);
+
+  try {
+    if (fs.existsSync(outputPath)) {
+      fs.unlinkSync(outputPath);
+
+      // Clean up jobs record if jobId was provided
+      if (jobId && jobs[jobId]) {
+        delete jobs[jobId];
+      }
+
+      return res.json({ message: 'Video deleted successfully', filename });
+    } else {
+      return res.status(404).json({ error: 'Video file not found' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Failed to delete video', details: error.message });
+  }
 };

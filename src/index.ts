@@ -85,6 +85,34 @@ const swaggerDocument = {
           }
         }
       }
+    },
+    '/api/v1/video/delete': {
+      post: {
+        summary: 'Delete a generated video',
+        description: 'Deletes the output video file from the server to reduce storage.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  jobId: { type: 'string', description: 'The ID of the job whose video should be deleted.' },
+                  filePath: { type: 'string', description: 'The path or filename of the video to delete.' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'Video deleted successfully',
+            content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' }, filename: { type: 'string' } } } } }
+          },
+          400: { description: 'Missing jobId or filePath' },
+          404: { description: 'Video file not found' }
+        }
+      }
     }
   }
 };
