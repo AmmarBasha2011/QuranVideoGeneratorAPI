@@ -10,7 +10,7 @@ import { quranRoutes } from './routes/quran.routes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 app.use(cors());
 app.use(express.json());
@@ -35,7 +35,10 @@ const swaggerDocument = {
     version: '1.1.0',
     description: 'API for generating randomized Quranic shorts for YouTube/TikTok/Reels. Ideal for automation tools.'
   },
-  servers: [{ url: `http://localhost:${PORT}` }],
+  servers: [
+    { url: '/', description: 'Current Server' },
+    { url: `http://localhost:${PORT}`, description: 'Local Development Server' }
+  ],
   paths: {
     '/api/v1/video/generate': {
       post: {
@@ -83,6 +86,93 @@ const swaggerDocument = {
             description: 'Current job status and progress',
             content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string' }, progress: { type: 'number' }, downloadUrl: { type: 'string' } } } } }
           }
+        }
+      }
+    },
+    '/api/v1/video/delete': {
+      post: {
+        summary: 'Delete a generated video',
+        description: 'Deletes the output video file from the server to reduce storage.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  jobId: { type: 'string', description: 'The ID of the job whose video should be deleted.' },
+                  filePath: { type: 'string', description: 'The path or filename of the video to delete.' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'Video deleted successfully',
+            content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' }, filename: { type: 'string' } } } } }
+          },
+          400: { description: 'Missing jobId or filePath' },
+          404: { description: 'Video file not found' }
+        }
+      }
+    },
+    '/api/v1/quran/reciters': {
+      get: {
+        summary: 'Get available reciters',
+        description: 'Returns a list of reciters available for video generation, including their IDs and names.',
+        responses: {
+          200: {
+            description: 'List of reciters',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string', description: 'Unique ID for the reciter' },
+                      name: { type: 'string', description: 'Full name of the reciter' }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          500: { description: 'Failed to fetch reciters' }
+        }
+      }
+    },
+    '/api/v1/quran/surahs': {
+      get: {
+        summary: 'Get all Surahs',
+        description: 'Returns a list of all 114 Surahs from the Holy Quran using the Quran.com API.',
+        responses: {
+          200: {
+            description: 'List of Surahs',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'number' },
+                      revelation_place: { type: 'string' },
+                      revelation_order: { type: 'number' },
+                      bismillah_pre: { type: 'boolean' },
+                      name_simple: { type: 'string' },
+                      name_complex: { type: 'string' },
+                      name_arabic: { type: 'string' },
+                      verses_count: { type: 'number' },
+                      pages: { type: 'array', items: { type: 'number' } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          500: { description: 'Failed to fetch Surahs' }
         }
       }
     }
