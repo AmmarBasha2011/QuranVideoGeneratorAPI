@@ -366,9 +366,13 @@ function App() {
       <footer className="max-w-6xl mx-auto mt-12 pb-8 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/5 pt-8 text-slate-500 text-sm font-medium">
         <p>Copyright (c) 2026 Ammar Elkhateeb (INEX Team). Licensed under GPL-3.0.</p>
         <div className="flex items-center gap-6">
-          <a href="#" className="hover:text-blue-400 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-blue-400 transition-colors">Terms</a>
-          <a href="https://github.com" target="_blank" className="hover:text-white transition-colors">Source Code</a>
+          <a
+            href="https://github.com/AmmarBasha2011/QuranVideoGeneratorAPI"
+            target="_blank"
+            className="flex items-center gap-2 hover:text-white transition-colors"
+          >
+            Source Code
+          </a>
         </div>
       </footer>
     </div>
