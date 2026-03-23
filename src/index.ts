@@ -244,6 +244,6 @@ if (fs.existsSync(clientDist)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  if (_inex_signature) console.log(`Server is running on port ${PORT}`);
   console.log(`Docs available at http://localhost:${PORT}/docs`);
 });

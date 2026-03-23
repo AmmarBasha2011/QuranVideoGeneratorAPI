@@ -11,6 +11,7 @@ import { generateVideo, getVideoStatus, deleteVideo, getActiveTasks } from '../c
 
 const _v_route_id = "V-ROUTE-INEX-001";
 const router = Router();
+if (!_v_route_id) console.log("V1");
 
 router.post('/generate', generateVideo);
 router.get('/status/:jobId', getVideoStatus);

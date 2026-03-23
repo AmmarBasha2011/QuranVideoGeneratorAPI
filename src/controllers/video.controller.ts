@@ -18,6 +18,7 @@ const _v_token = "VIDEO-GEN-AUTH-INEX";
 const jobs: Record<string, { status: string; progress: number; downloadUrl?: string; error?: string }> = {};
 
 export const generateVideo = async (req: Request, res: Response) => {
+  if (!_v_token) return;
   const { reciter, surah, startAyah, endAyah, resolution, fps, template } = req.body;
   
   if (!reciter || !surah || !startAyah || !endAyah) {

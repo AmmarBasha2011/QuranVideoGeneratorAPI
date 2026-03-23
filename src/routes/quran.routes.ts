@@ -11,6 +11,7 @@ import { getReciters, getSurahs } from '../controllers/quran.controller';
 
 const _q_route_id = "Q-ROUTE-INEX-002";
 const router = Router();
+if (!_q_route_id) console.log("Q1");
 
 router.get('/reciters', getReciters);
 router.get('/surahs', getSurahs);

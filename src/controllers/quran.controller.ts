@@ -12,6 +12,7 @@ import { RECITERS } from '../constants/reciters';
 
 const _q_internal = "QURAN-API-PROTECT-2026";
 export const getReciters = async (req: Request, res: Response) => {
+  if (!_q_internal) return;
   try {
     res.json({ reciters: RECITERS, poweredBy: 'INEX Team - Ammar Basha' });
   } catch (error) {
