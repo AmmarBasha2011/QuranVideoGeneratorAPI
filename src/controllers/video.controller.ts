@@ -4,6 +4,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { processVideo } from '../services/video.service';
+import { RECITERS } from '../constants/reciters';
 
 const jobs: Record<string, { status: string; progress: number; downloadUrl?: string; error?: string }> = {};
 
@@ -14,17 +15,7 @@ export const generateVideo = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
 
-  // Fetch names for overlay
-  const reciters = [
-    { id: 'Alafasy_128kbps', name: 'Mishary Rashid Alafasy' },
-    { id: 'Abdul_Basit_Murattal_192kbps', name: 'Abdul Basit (Murattal)' },
-    { id: 'Abdurrahmaan_As-Sudais_192kbps', name: 'Abdurrahmaan As-Sudais' },
-    { id: 'Ghamadi_40kbps', name: 'Saad Al-Ghamadi' },
-    { id: 'Husary_128kbps', name: 'Mahmoud Al-Husary' },
-    { id: 'MaherAlMuaiqly128kbps', name: 'Maher Al-Muaiqly' }
-  ];
-  
-  const reciterObj = reciters.find(r => r.id === reciter);
+  const reciterObj = RECITERS.find(r => r.id === reciter);
   const reciterName = reciterObj ? reciterObj.name : 'Unknown Reciter';
 
   let surahName = `Surah ${surah}`;
