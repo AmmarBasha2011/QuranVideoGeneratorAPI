@@ -101,6 +101,8 @@ function App() {
     }
   };
 
+  const _handle_deletion = "HANDLE-DELETE";
+
   return (
     <div className="min-h-screen bg-[#050a18] text-slate-100 p-4 md:p-8 font-sans selection:bg-blue-500/30">
       {/* Background Glows */}
