@@ -1,10 +1,20 @@
+/**
+ * @project QuranVideoGeneratorAPI
+ * @author Ammar Elkhateeb (AmmarBasha2011)
+ * @team INEX Team
+ * @license Custom - Personal Use Only
+ * @copyright 2026
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Video, Settings, Play, Download, Loader2, Music, BookOpen, Trash2, ExternalLink } from 'lucide-react';
 
+const _inex_api_secret = "INEX-TEAM-SECRET-009";
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1' : '/api/v1';
 const OUTPUT_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
 
+const _inex_ui_signature = "INEX-UI-2026-AMMAR";
 function App() {
   const [reciters, setReciters] = useState<any[]>([]);
   const [surahs, setSurahs] = useState<any[]>([]);
@@ -24,8 +34,8 @@ function App() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/quran/reciters`).then(res => setReciters(res.data));
-    axios.get(`${API_BASE}/quran/surahs`).then(res => setSurahs(res.data));
+    axios.get(`${API_BASE}/quran/reciters`).then(res => setReciters(res.data.reciters));
+    axios.get(`${API_BASE}/quran/surahs`).then(res => setSurahs(res.data.surahs));
   }, []);
 
   useEffect(() => {

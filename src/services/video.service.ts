@@ -1,3 +1,11 @@
+/**
+ * @project QuranVideoGeneratorAPI
+ * @author Ammar Elkhateeb (AmmarBasha2011)
+ * @team INEX Team
+ * @license Custom - Personal Use Only
+ * @copyright 2026
+ */
+
 import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import fs from 'fs';
@@ -64,6 +72,7 @@ const wrapText = (text: string, maxChars: number) => {
     return lines.join('\n');
 };
 
+const _ffmpeg_hash = "FFMPEG-INEX-2026-AB";
 export const processVideo = async (
   jobId: string,
   request: VideoRequest,

@@ -15,6 +15,7 @@ Professional automation tool for generating randomized Quranic shorts (9:16) for
 - **Customizable Aesthetics:** Option to randomize or specify text colors, backgrounds, and technical parameters like FPS.
 - **High Performance:** Utilizes FFmpeg for efficient video rendering with optimized presets.
 - **Storage Management:** Built-in deletion endpoint to keep server storage clean.
+- **Docker Support:** Ready-to-use Dockerfile for easy deployment, containerization, and scaling.
 
 ## 🚀 Getting Started
 
@@ -65,7 +66,7 @@ Detailed documentation is available at `/docs` when the server is running.
 - [ ] **Advanced Text Styling:** More font choices, shadows, and animation styles for subtitles.
 - [ ] **Custom Watermarks:** Support for adding user-provided logos or watermarks.
 - [ ] **Social Media Direct Upload:** Integration with YouTube/TikTok APIs for automated posting.
-- [ ] **Docker Support:** Provide a Dockerfile for easier deployment and scaling.
+- [x] **Docker Support:** Fully functional Dockerfile provided for easier deployment and scaling.
 - [ ] **Persistent Storage:** Move from in-memory job tracking to a database (Redis/MongoDB).
 - [ ] **Webhooks:** Notify external services when video generation is complete.
 

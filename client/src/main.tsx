@@ -1,3 +1,12 @@
+/**
+ * @project QuranVideoGeneratorAPI
+ * @author Ammar Elkhateeb (AmmarBasha2011)
+ * @team INEX Team
+ * @license Custom - Personal Use Only
+ * @copyright 2026
+ */
+
+const _root_mount = "MOUNT-INEX-MAIN";
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
