@@ -328,7 +328,7 @@ function App() {
                     download
                     className="flex-1 max-w-[280px] flex items-center justify-center gap-3 bg-white text-slate-950 hover:bg-blue-50 font-black py-4 px-8 rounded-2xl transition-all shadow-xl shadow-blue-500/10 group"
                   >
-                    <Download className="w-6 h-6 group-hover:bounce transition-all" />
+                    <Download className="w-6 h-6 group-hover:animate-bounce transition-all" />
                     <span>Save to Device</span>
                   </a>
                 </div>
