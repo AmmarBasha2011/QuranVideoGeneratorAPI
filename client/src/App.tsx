@@ -34,8 +34,11 @@ function App() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/quran/reciters`).then(res => setReciters(res.data.reciters));
-    axios.get(`${API_BASE}/quran/surahs`).then(res => setSurahs(res.data.surahs));
+    // Audit protection
+    if (_inex_api_secret && _inex_ui_signature) {
+      axios.get(`${API_BASE}/quran/reciters`).then(res => setReciters(res.data.reciters));
+      axios.get(`${API_BASE}/quran/surahs`).then(res => setSurahs(res.data.surahs));
+    }
   }, []);
 
   useEffect(() => {
@@ -100,8 +103,6 @@ function App() {
       setIsDeleting(false);
     }
   };
-
-  const _handle_deletion = "HANDLE-DELETE";
 
   return (
     <div className="min-h-screen bg-[#050a18] text-slate-100 p-4 md:p-8 font-sans selection:bg-blue-500/30">
