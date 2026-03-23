@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Video, Settings, Play, Download, Loader2, Music, BookOpen } from 'lucide-react';
+import { Video, Settings, Play, Download, Loader2, Music, BookOpen, Trash2, ExternalLink } from 'lucide-react';
 
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api/v1' : '/api/v1';
 const OUTPUT_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
@@ -21,6 +21,7 @@ function App() {
   const [status, setStatus] = useState<string>('idle');
   const [progress, setProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     axios.get(`${API_BASE}/quran/reciters`).then(res => setReciters(res.data));
@@ -72,192 +73,291 @@ function App() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!jobId) return;
+    setIsDeleting(true);
+    try {
+      await axios.post(`${API_BASE}/video/delete`, { jobId });
+      setVideoUrl(null);
+      setJobId(null);
+      setStatus('idle');
+      setProgress(0);
+      alert('Video deleted successfully from server storage.');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to delete video');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8 w-full">
-      <header className="max-w-4xl mx-auto mb-12 flex items-center gap-3">
-        <div className="bg-indigo-600 p-3 rounded-2xl">
-          <Video className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-[#050a18] text-slate-100 p-4 md:p-8 font-sans selection:bg-blue-500/30">
+      {/* Background Glows */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10 bg-[#050a18]">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
+      </div>
+
+      <header className="max-w-6xl mx-auto mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-3 rounded-2xl shadow-lg shadow-blue-900/20 ring-1 ring-blue-400/20">
+            <Video className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-blue-400 bg-clip-text text-transparent">
+              Quran Video Maker
+            </h1>
+            <p className="text-blue-400/80 font-medium text-sm md:text-base">Professional Automation for Quranic Media</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-            Quran Video Maker
-          </h1>
-          <p className="text-slate-400">Professional Quranic Videos in Seconds</p>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="/docs"
+            target="_blank"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-sm font-medium transition-all"
+          >
+            <ExternalLink className="w-4 h-4" /> API Docs
+          </a>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="space-y-8 bg-slate-900/50 p-8 rounded-3xl border border-slate-800 shadow-xl">
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 text-indigo-400 font-semibold mb-4">
-              <Music className="w-5 h-5" />
-              <h2>Audio Selection</h2>
-            </div>
+      <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Settings Panel */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-slate-900/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-blue-500/10 shadow-2xl shadow-black/50 overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-8 -mr-8 -mt-8 bg-blue-600/5 blur-3xl w-32 h-32 rounded-full" />
             
-            <div className="space-y-2">
-              <label className="text-sm text-slate-400 ml-1">Choose Reciter (Qari)</label>
-              <select 
-                className="w-full bg-slate-800 border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                value={selectedReciter}
-                onChange={(e) => setSelectedReciter(e.target.value)}
-              >
-                <option value="">Select Reciter</option>
-                {reciters.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
-            </div>
+            <section className="space-y-6 relative">
+              <div className="flex items-center gap-3 text-blue-400 font-bold tracking-wide uppercase text-xs">
+                <Music className="w-4 h-4" />
+                <span>Recitation Settings</span>
+              </div>
 
-            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">Surah</label>
-                <select 
-                  className="w-full bg-slate-800 border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={selectedSurah}
-                  onChange={(e) => setSelectedSurah(Number(e.target.value))}
-                >
-                  {surahs.map(s => <option key={s.id} value={s.id}>{s.id}. {s.name_simple}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">From Ayah</label>
-                <input 
-                  type="number" 
-                  className="w-full bg-slate-800 border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={startAyah}
-                  onChange={(e) => setStartAyah(Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">To Ayah</label>
-                <input 
-                  type="number" 
-                  className="w-full bg-slate-800 border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={endAyah}
-                  onChange={(e) => setEndAyah(Number(e.target.value))}
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-6 pt-6 border-t border-slate-800">
-            <div className="flex items-center gap-2 text-indigo-400 font-semibold mb-4">
-              <Settings className="w-5 h-5" />
-              <h2>Video Customization</h2>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">Format</label>
-                <div className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-300">
-                  Shorts/Reels (9:16) - 1080x1920
+                <label className="text-sm text-slate-400 font-medium ml-1">Reciter</label>
+                <div className="relative">
+                  <select
+                    className="w-full bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all appearance-none cursor-pointer"
+                    value={selectedReciter}
+                    onChange={(e) => setSelectedReciter(e.target.value)}
+                  >
+                    <option value="">Select a Voice...</option>
+                    {reciters.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+                    <Music className="w-4 h-4" />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">Frame Rate</label>
-                <select 
-                  className="w-full bg-slate-800 border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={fps}
-                  onChange={(e) => setFps(Number(e.target.value))}
-                >
-                  <option value={30}>30 FPS</option>
-                  <option value={60}>60 FPS</option>
-                </select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">Text Color (Random if not set)</label>
-                <input 
-                  type="color" 
-                  className="w-full h-12 bg-slate-800 border-slate-700 rounded-xl px-2 py-2 cursor-pointer"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400 ml-1">Background</label>
-                <div className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-300 text-xs">
-                  Randomize from 10 HD backgrounds
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-1 space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">Surah</label>
+                  <select
+                    className="w-full bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all cursor-pointer"
+                    value={selectedSurah}
+                    onChange={(e) => setSelectedSurah(Number(e.target.value))}
+                  >
+                    {surahs.map(s => <option key={s.id} value={s.id}>{s.id}. {s.name_simple}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">From Ayah</label>
+                  <input
+                    type="number"
+                    className="w-full bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all"
+                    value={startAyah}
+                    onChange={(e) => setStartAyah(Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">To Ayah</label>
+                  <input
+                    type="number"
+                    className="w-full bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all"
+                    value={endAyah}
+                    onChange={(e) => setEndAyah(Number(e.target.value))}
+                  />
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <button 
-            onClick={handleGenerate}
-            disabled={!selectedReciter || status === 'started' || status === 'pending'}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/20"
-          >
-            {status === 'started' || status === 'pending' ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Generating...</>
-            ) : (
-              <><Play className="w-5 h-5" /> Generate Video</>
-            )}
-          </button>
+            <section className="mt-8 pt-8 border-t border-slate-800/50 space-y-6 relative">
+              <div className="flex items-center gap-3 text-indigo-400 font-bold tracking-wide uppercase text-xs">
+                <Settings className="w-4 h-4" />
+                <span>Visual Style</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">Aspect Ratio</label>
+                  <div className="w-full bg-slate-950/50 border border-slate-800/50 text-slate-500 rounded-2xl px-4 py-4 text-sm font-medium">
+                    Vertical (9:16)
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">Frame Rate</label>
+                  <select
+                    className="w-full bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all cursor-pointer"
+                    value={fps}
+                    onChange={(e) => setFps(Number(e.target.value))}
+                  >
+                    <option value={30}>30 FPS</option>
+                    <option value={60}>60 FPS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">Subtitles Color</label>
+                  <div className="relative group/color">
+                    <input
+                      type="color"
+                      className="w-full h-14 bg-slate-950/80 border border-slate-800 rounded-2xl px-2 py-2 cursor-pointer transition-all hover:border-blue-500/50"
+                      value={textColor}
+                      onChange={(e) => setTextColor(e.target.value)}
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono opacity-40 uppercase">
+                      {textColor}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-slate-400 font-medium ml-1">Background Mode</label>
+                  <div className="w-full h-14 bg-slate-950/50 border border-slate-800/50 text-slate-500 rounded-2xl flex items-center px-4 text-xs italic">
+                    Random 4K Cinematic
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <button
+              onClick={handleGenerate}
+              disabled={!selectedReciter || status === 'started' || status === 'pending'}
+              className="mt-8 w-full relative group overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 disabled:from-slate-800 disabled:to-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-xl shadow-blue-900/20"
+            >
+              <div className="relative z-10 flex items-center justify-center gap-3">
+                {status === 'started' || status === 'pending' ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> <span>Rendering Video...</span></>
+                ) : (
+                  <><Play className="w-5 h-5 fill-current" /> <span>Craft Video Now</span></>
+                )}
+              </div>
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[400px]">
+        {/* Preview Panel */}
+        <div className="lg:col-span-7 flex flex-col gap-6 h-full">
+          <div className="bg-slate-900/20 backdrop-blur-sm p-4 md:p-8 rounded-[2.5rem] border border-white/5 flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[500px] shadow-inner">
+            {/* Inner background element */}
+            <div className="absolute inset-0 bg-[#0a1124] -z-10 opacity-40" />
+
             {!videoUrl && status === 'idle' && (
-              <div className="space-y-4">
-                <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto">
-                  <BookOpen className="w-10 h-10 text-slate-600" />
+              <div className="space-y-6 animate-in fade-in zoom-in duration-700">
+                <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl flex items-center justify-center mx-auto shadow-2xl ring-1 ring-white/5">
+                  <BookOpen className="w-12 h-12 text-blue-500/50" />
                 </div>
-                <h3 className="text-xl font-medium text-slate-300">Preview Area</h3>
-                <p className="text-slate-500 max-w-xs">Your Quranic video will appear here after generation</p>
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-100">Video Canvas</h3>
+                  <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium">Configure your settings and hit generate to see the magic happen.</p>
+                </div>
               </div>
             )}
 
             {(status === 'started' || status === 'pending') && (
-              <div className="w-full max-w-sm space-y-6">
-                <div className="h-4 bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-indigo-500 transition-all duration-500"
-                    style={{ width: `${progress}%` }}
-                  />
+              <div className="w-full max-w-sm space-y-8 p-12 bg-slate-950/50 rounded-[2rem] border border-blue-500/10 shadow-2xl">
+                <div className="relative">
+                  <svg className="w-32 h-32 mx-auto rotate-[-90deg]">
+                    <circle
+                      cx="64" cy="64" r="60"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      className="text-slate-800"
+                    />
+                    <circle
+                      cx="64" cy="64" r="60"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={377}
+                      strokeDashoffset={377 - (377 * progress) / 100}
+                      strokeLinecap="round"
+                      className="text-blue-500 transition-all duration-500"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center font-black text-2xl text-white">
+                    {Math.round(progress)}%
+                  </div>
                 </div>
-                <p className="text-indigo-400 font-medium">{Math.round(progress)}% Processed</p>
+                <div>
+                  <p className="text-white font-bold text-lg">Processing Your Masterpiece</p>
+                  <p className="text-blue-400 text-sm mt-1 animate-pulse font-medium">Applying AI Filters & Subtitles...</p>
+                </div>
               </div>
             )}
 
             {videoUrl && (
-              <div className="w-full h-full space-y-6">
-                <video 
-                  src={videoUrl} 
-                  controls 
-                  className={`mx-auto rounded-2xl shadow-2xl border border-slate-800 ${resolution === '1080x1920' ? 'h-[500px]' : 'w-full'}`}
-                />
-                <a 
-                  href={videoUrl} 
-                  download 
-                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-xl transition-all"
-                >
-                  <Download className="w-5 h-5" /> Download 1080p Video
-                </a>
+              <div className="w-full h-full flex flex-col items-center justify-center space-y-8 py-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="relative group">
+                  <video
+                    src={videoUrl}
+                    controls
+                    className="max-h-[550px] rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border-4 border-slate-900/80 bg-black"
+                  />
+                  <div className="absolute -top-4 -right-4 flex gap-2">
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="p-3 bg-red-500/90 hover:bg-red-500 text-white rounded-2xl shadow-xl transition-all hover:scale-110 active:scale-95 disabled:opacity-50"
+                      title="Delete from server"
+                    >
+                      {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-4 w-full px-4">
+                  <a
+                    href={videoUrl}
+                    download
+                    className="flex-1 max-w-[280px] flex items-center justify-center gap-3 bg-white text-slate-950 hover:bg-blue-50 font-black py-4 px-8 rounded-2xl transition-all shadow-xl shadow-blue-500/10 group"
+                  >
+                    <Download className="w-6 h-6 group-hover:bounce transition-all" />
+                    <span>Save to Device</span>
+                  </a>
+                </div>
               </div>
             )}
 
             {status === 'failed' && (
-              <div className="text-red-400 space-y-2">
-                <p className="font-bold text-xl">Generation Failed</p>
-                <p className="text-sm opacity-80">Please try again with different parameters</p>
+              <div className="p-10 bg-red-500/5 rounded-3xl border border-red-500/20 text-red-400 space-y-4 max-w-sm">
+                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+                  <Trash2 className="w-8 h-8" />
+                </div>
+                <div className="space-y-2">
+                  <p className="font-black text-2xl tracking-tight">Generation Failed</p>
+                  <p className="text-sm font-medium opacity-80 leading-relaxed">FFmpeg was unable to process this request. Check your Ayah range and try again.</p>
+                </div>
               </div>
             )}
           </div>
-          
-          <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800">
-            <h3 className="text-indigo-400 font-semibold mb-2">API Documentation</h3>
-            <p className="text-slate-400 text-sm mb-4">Integrate this engine into your own apps. Full documentation available at:</p>
-            <a 
-              href="/docs" 
-              target="_blank"
-              className="text-white hover:text-indigo-400 underline underline-offset-4 text-sm font-mono"
-            >
-              http://localhost:3000/docs
-            </a>
-          </div>
         </div>
       </main>
+
+      <footer className="max-w-6xl mx-auto mt-12 pb-8 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/5 pt-8 text-slate-500 text-sm font-medium">
+        <p>© 2024 Quran Video Maker API. All Rights Reserved.</p>
+        <div className="flex items-center gap-6">
+          <a href="#" className="hover:text-blue-400 transition-colors">Privacy</a>
+          <a href="#" className="hover:text-blue-400 transition-colors">Terms</a>
+          <a href="https://github.com" target="_blank" className="hover:text-white transition-colors">Source Code</a>
+        </div>
+      </footer>
     </div>
   );
 }

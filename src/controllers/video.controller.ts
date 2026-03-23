@@ -66,7 +66,7 @@ export const getVideoStatus = (req: Request, res: Response) => {
   res.json(job);
 };
 
-export const deleteVideo = (req: Request, res: Response) => {
+export const deleteVideo = async (req: Request, res: Response) => {
   const { jobId, filePath } = req.body;
 
   if (!jobId && !filePath) {
@@ -75,7 +75,8 @@ export const deleteVideo = (req: Request, res: Response) => {
 
   let filename: string;
   if (jobId) {
-    filename = `${jobId}.mp4`;
+    // Sanitize jobId as well to prevent traversal
+    filename = path.basename(`${jobId}.mp4`);
   } else {
     filename = path.basename(filePath);
   }
@@ -84,7 +85,7 @@ export const deleteVideo = (req: Request, res: Response) => {
 
   try {
     if (fs.existsSync(outputPath)) {
-      fs.unlinkSync(outputPath);
+      await fs.promises.unlink(outputPath);
 
       // Clean up jobs record if jobId was provided
       if (jobId && jobs[jobId]) {
