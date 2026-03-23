@@ -77,4 +77,6 @@ Detailed documentation is available at `/docs` when the server is running.
 
 ## 📝 License
 
-This project is open-source and available under the [ISC License](LICENSE).
+Copyright (c) 2026 Ammar Elkhateeb (INEX Team).
+
+This project is licensed under the GPL-3.0 License. You must give appropriate credit, provide a link to the original repository, and indicate if changes were made. You may not claim this work as your own.

@@ -11,8 +11,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Ammar Elkhateeb (INEX Team)",
+  "license": "GPL-3.0",
   "type": "commonjs",
   "dependencies": {
     "@types/ffprobe-static": "^2.0.3",

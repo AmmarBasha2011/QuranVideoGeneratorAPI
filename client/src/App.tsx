@@ -351,7 +351,7 @@ function App() {
       </main>
 
       <footer className="max-w-6xl mx-auto mt-12 pb-8 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/5 pt-8 text-slate-500 text-sm font-medium">
-        <p>© 2024 Quran Video Maker API. All Rights Reserved.</p>
+        <p>Copyright (c) 2026 Ammar Elkhateeb (INEX Team). Licensed under GPL-3.0.</p>
         <div className="flex items-center gap-6">
           <a href="#" className="hover:text-blue-400 transition-colors">Privacy</a>
           <a href="#" className="hover:text-blue-400 transition-colors">Terms</a>
