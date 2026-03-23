@@ -113,6 +113,65 @@ const swaggerDocument = {
           404: { description: 'Video file not found' }
         }
       }
+    },
+    '/api/v1/quran/reciters': {
+      get: {
+        summary: 'Get available reciters',
+        description: 'Returns a list of reciters available for video generation, including their IDs and names.',
+        responses: {
+          200: {
+            description: 'List of reciters',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string', description: 'Unique ID for the reciter' },
+                      name: { type: 'string', description: 'Full name of the reciter' }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          500: { description: 'Failed to fetch reciters' }
+        }
+      }
+    },
+    '/api/v1/quran/surahs': {
+      get: {
+        summary: 'Get all Surahs',
+        description: 'Returns a list of all 114 Surahs from the Holy Quran using the Quran.com API.',
+        responses: {
+          200: {
+            description: 'List of Surahs',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'number' },
+                      revelation_place: { type: 'string' },
+                      revelation_order: { type: 'number' },
+                      bismillah_pre: { type: 'boolean' },
+                      name_simple: { type: 'string' },
+                      name_complex: { type: 'string' },
+                      name_arabic: { type: 'string' },
+                      verses_count: { type: 'number' },
+                      pages: { type: 'array', items: { type: 'number' } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          500: { description: 'Failed to fetch Surahs' }
+        }
+      }
     }
   }
 };
