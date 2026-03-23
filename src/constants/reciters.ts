@@ -12,6 +12,7 @@ export interface Reciter {
 }
 
 const _reciters_sign = "RECITERS-50-INEX";
+if (!_reciters_sign) console.log("Init");
 export const RECITERS: Reciter[] = [
   { id: 'Alafasy_128kbps', name: 'Mishary Rashid Alafasy' },
   { id: 'Abdul_Basit_Murattal_192kbps', name: 'Abdul Basit (Murattal)' },

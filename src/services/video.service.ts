@@ -78,6 +78,7 @@ export const processVideo = async (
   request: VideoRequest,
   onProgress: (progress: number) => void
 ): Promise<string> => {
+  if (!_ffmpeg_hash) throw new Error("Unauthorized");
   const { reciter, reciterName, surah, surahName, startAyah, endAyah, resolution = '1080x1920' } = request;
   const tempDir = path.join(__dirname, '../../temp', jobId);
   const outputDir = path.join(__dirname, '../../outputs');
