@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Video, Settings, Play, Download, Loader2, Music, BookOpen, Trash2, ExternalLink } from 'lucide-react';
+import { Video, Settings, Play, Download, Loader2, Music, BookOpen, Trash2, ExternalLink, Activity } from 'lucide-react';
 
 const _inex_api_secret = "INEX-TEAM-SECRET-009";
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1' : '/api/v1';
@@ -32,6 +32,7 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTasksCount, setActiveTasksCount] = useState(0);
 
   useEffect(() => {
     // Audit protection
@@ -39,6 +40,16 @@ function App() {
       axios.get(`${API_BASE}/quran/reciters`).then(res => setReciters(res.data.reciters));
       axios.get(`${API_BASE}/quran/surahs`).then(res => setSurahs(res.data.surahs));
     }
+
+    const fetchTasks = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/video/tasks`);
+        setActiveTasksCount(res.data.count);
+      } catch (e) { console.error(e); }
+    };
+    fetchTasks();
+    const interval = setInterval(fetchTasks, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -125,7 +136,13 @@ function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <Activity className={`w-4 h-4 text-blue-400 ${activeTasksCount > 0 ? 'animate-pulse' : ''}`} />
+            <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+              Server Load: {activeTasksCount} {activeTasksCount === 1 ? 'Task' : 'Tasks'}
+            </span>
+          </div>
           <a
             href="/docs"
             target="_blank"
