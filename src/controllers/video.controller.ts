@@ -75,6 +75,18 @@ export const getVideoStatus = (req: Request, res: Response) => {
   res.json({ ...job, poweredBy: 'INEX Team - Ammar Basha' });
 };
 
+export const getActiveTasks = (req: Request, res: Response) => {
+  const activeJobs = Object.keys(jobs)
+    .filter(id => jobs[id].status === 'pending' || jobs[id].status === 'started')
+    .map(id => ({ jobId: id, ...jobs[id] }));
+
+  res.json({
+    count: activeJobs.length,
+    tasks: activeJobs,
+    poweredBy: 'INEX Team - Ammar Basha'
+  });
+};
+
 export const deleteVideo = async (req: Request, res: Response) => {
   const { jobId, filePath } = req.body;
 

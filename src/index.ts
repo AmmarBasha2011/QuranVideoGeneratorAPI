@@ -86,6 +86,29 @@ const swaggerDocument = {
         }
       }
     },
+    '/api/v1/video/tasks': {
+      get: {
+        summary: 'List active server tasks',
+        description: 'Returns all currently processing or pending video generation tasks on the server.',
+        responses: {
+          200: {
+            description: 'Active task list',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    count: { type: 'number' },
+                    tasks: { type: 'array', items: { type: 'object' } },
+                    poweredBy: { type: 'string' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     '/api/v1/video/status/{jobId}': {
       get: {
         summary: 'Check video generation status',
