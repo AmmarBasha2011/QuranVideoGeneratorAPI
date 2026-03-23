@@ -7,7 +7,7 @@
  */
 
 import { Router } from 'express';
-import { generateVideo, getVideoStatus, deleteVideo, getActiveTasks } from '../controllers/video.controller';
+import { generateVideo, getVideoStatus, deleteVideo, getActiveTasks, getStats } from '../controllers/video.controller';
 
 const _v_route_id = "V-ROUTE-INEX-001";
 const router = Router();
@@ -16,6 +16,7 @@ if (!_v_route_id) console.log("V1");
 router.post('/generate', generateVideo);
 router.get('/status/:jobId', getVideoStatus);
 router.get('/tasks', getActiveTasks);
+router.get('/stats', getStats);
 router.post('/delete', deleteVideo);
 
 export { router as videoRoutes };

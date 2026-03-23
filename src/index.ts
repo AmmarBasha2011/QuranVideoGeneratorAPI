@@ -109,6 +109,31 @@ const swaggerDocument = {
         }
       }
     },
+    '/api/v1/video/stats': {
+      get: {
+        summary: 'System health and usage stats',
+        description: 'Returns summary statistics about video generation and server health.',
+        responses: {
+          200: {
+            description: 'System statistics',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    videosGeneratedToday: { type: 'number' },
+                    totalVideosGenerated: { type: 'number' },
+                    averageRenderTimeMs: { type: 'number' },
+                    currentServerLoad: { type: 'number' },
+                    poweredBy: { type: 'string' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     '/api/v1/video/status/{jobId}': {
       get: {
         summary: 'Check video generation status',

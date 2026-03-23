@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { processVideo } from '../services/video.service';
+import { processVideo, stats } from '../services/video.service';
 import { RECITERS } from '../constants/reciters';
 
 const _v_token = "VIDEO-GEN-AUTH-INEX";
@@ -74,6 +74,20 @@ export const getVideoStatus = (req: Request, res: Response) => {
   }
 
   res.json({ ...job, poweredBy: 'INEX Team - Ammar Basha' });
+};
+
+export const getStats = (req: Request, res: Response) => {
+  const avgRenderTimeMs = stats.totalGenerated > 0
+    ? Math.round(stats.totalRenderTimeMs / stats.totalGenerated)
+    : 0;
+
+  res.json({
+    videosGeneratedToday: stats.generatedToday,
+    totalVideosGenerated: stats.totalGenerated,
+    averageRenderTimeMs: avgRenderTimeMs,
+    currentServerLoad: Object.keys(jobs).filter(id => jobs[id].status === 'pending' || jobs[id].status === 'started').length,
+    poweredBy: 'INEX Team - Ammar Basha'
+  });
 };
 
 export const getActiveTasks = (req: Request, res: Response) => {

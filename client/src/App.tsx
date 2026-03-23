@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Video, Settings, Play, Download, Loader2, Music, BookOpen, Trash2, ExternalLink, Activity, X, Server } from 'lucide-react';
+import { Video, Settings, Play, Download, Loader2, Music, BookOpen, Trash2, ExternalLink, Activity, X, Server, HeartPulse, Clock, BarChart3 } from 'lucide-react';
 
 const _inex_api_secret = "INEX-TEAM-SECRET-009";
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1' : '/api/v1';
@@ -35,6 +35,7 @@ function App() {
   const [activeTasksCount, setActiveTasksCount] = useState(0);
   const [activeTasks, setActiveTasks] = useState<any[]>([]);
   const [showTasksPanel, setShowTasksPanel] = useState(false);
+  const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     // Audit protection
@@ -43,15 +44,19 @@ function App() {
       axios.get(`${API_BASE}/quran/surahs`).then(res => setSurahs(res.data.surahs));
     }
 
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/video/tasks`);
-        setActiveTasksCount(res.data.count);
-        setActiveTasks(res.data.tasks);
+        const [tasksRes, statsRes] = await Promise.all([
+          axios.get(`${API_BASE}/video/tasks`),
+          axios.get(`${API_BASE}/video/stats`)
+        ]);
+        setActiveTasksCount(tasksRes.data.count);
+        setActiveTasks(tasksRes.data.tasks);
+        setStats(statsRes.data);
       } catch (e) { console.error(e); }
     };
-    fetchTasks();
-    const interval = setInterval(fetchTasks, 5000);
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -162,6 +167,37 @@ function App() {
             <p className="text-[10px] text-slate-500 text-center font-medium uppercase tracking-widest">
               Live Monitoring System
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Health Dashboard Overlay */}
+      <div className="max-w-6xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-3xl flex items-center gap-4 group hover:border-blue-500/30 transition-all">
+          <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400 group-hover:scale-110 transition-transform">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Videos Generated Today</p>
+            <p className="text-xl font-black text-white">{stats?.videosGeneratedToday || 0}</p>
+          </div>
+        </div>
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-3xl flex items-center gap-4 group hover:border-indigo-500/30 transition-all">
+          <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:scale-110 transition-transform">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Average Render Time</p>
+            <p className="text-xl font-black text-white">{stats?.averageRenderTimeMs ? `${(stats.averageRenderTimeMs / 1000).toFixed(1)}s` : '0s'}</p>
+          </div>
+        </div>
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-3xl flex items-center gap-4 group hover:border-emerald-500/30 transition-all">
+          <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 group-hover:scale-110 transition-transform">
+            <HeartPulse className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">System Health</p>
+            <p className="text-xl font-black text-white">{activeTasksCount > 5 ? 'High Load' : 'Optimal'}</p>
           </div>
         </div>
       </div>
