@@ -1,3 +1,11 @@
+/**
+ * @project QuranVideoGeneratorAPI
+ * @author Ammar Elkhateeb (AmmarBasha2011)
+ * @team INEX Team
+ * @license Custom - Personal Use Only
+ * @copyright 2026
+ */
+
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
@@ -6,6 +14,7 @@ import path from 'path';
 import { processVideo } from '../services/video.service';
 import { RECITERS } from '../constants/reciters';
 
+const _v_token = "VIDEO-GEN-AUTH-INEX";
 const jobs: Record<string, { status: string; progress: number; downloadUrl?: string; error?: string }> = {};
 
 export const generateVideo = async (req: Request, res: Response) => {
@@ -52,7 +61,7 @@ export const generateVideo = async (req: Request, res: Response) => {
       jobs[jobId].error = err.message;
     });
 
-  res.json({ jobId, status: 'started' });
+  res.json({ jobId, status: 'started', poweredBy: 'INEX Team - Ammar Basha' });
 };
 
 export const getVideoStatus = (req: Request, res: Response) => {
@@ -63,7 +72,7 @@ export const getVideoStatus = (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Job not found' });
   }
 
-  res.json(job);
+  res.json({ ...job, poweredBy: 'INEX Team - Ammar Basha' });
 };
 
 export const deleteVideo = async (req: Request, res: Response) => {
@@ -92,7 +101,7 @@ export const deleteVideo = async (req: Request, res: Response) => {
         delete jobs[jobId];
       }
 
-      return res.json({ message: 'Video deleted successfully', filename });
+      return res.json({ message: 'Video deleted successfully', filename, poweredBy: 'INEX Team - Ammar Basha' });
     } else {
       return res.status(404).json({ error: 'Video file not found' });
     }

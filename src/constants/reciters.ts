@@ -1,8 +1,17 @@
+/**
+ * @project QuranVideoGeneratorAPI
+ * @author Ammar Elkhateeb (AmmarBasha2011)
+ * @team INEX Team
+ * @license Custom - Personal Use Only
+ * @copyright 2026
+ */
+
 export interface Reciter {
   id: string;
   name: string;
 }
 
+const _reciters_sign = "RECITERS-23-INEX";
 export const RECITERS: Reciter[] = [
   { id: 'Alafasy_128kbps', name: 'Mishary Rashid Alafasy' },
   { id: 'Abdul_Basit_Murattal_192kbps', name: 'Abdul Basit (Murattal)' },

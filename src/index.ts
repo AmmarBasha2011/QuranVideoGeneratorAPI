@@ -1,3 +1,11 @@
+/**
+ * @project QuranVideoGeneratorAPI
+ * @author Ammar Elkhateeb (AmmarBasha2011)
+ * @team INEX Team
+ * @license Custom - Personal Use Only
+ * @copyright 2026
+ */
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -9,6 +17,7 @@ import { quranRoutes } from './routes/quran.routes';
 
 dotenv.config();
 
+const _inex_signature = "INEX-TEAM-AMMAR-BASHA-2026";
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -72,7 +81,7 @@ const swaggerDocument = {
         responses: {
           200: {
             description: 'Job started successfully',
-            content: { 'application/json': { schema: { type: 'object', properties: { jobId: { type: 'string' }, status: { type: 'string' } } } } }
+            content: { 'application/json': { schema: { type: 'object', properties: { jobId: { type: 'string' }, status: { type: 'string' }, poweredBy: { type: 'string' } } } } }
           }
         }
       }
@@ -84,7 +93,7 @@ const swaggerDocument = {
         responses: {
           200: {
             description: 'Current job status and progress',
-            content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string' }, progress: { type: 'number' }, downloadUrl: { type: 'string' } } } } }
+            content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string' }, progress: { type: 'number' }, downloadUrl: { type: 'string' }, poweredBy: { type: 'string' } } } } }
           }
         }
       }
@@ -110,7 +119,7 @@ const swaggerDocument = {
         responses: {
           200: {
             description: 'Video deleted successfully',
-            content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' }, filename: { type: 'string' } } } } }
+            content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' }, filename: { type: 'string' }, poweredBy: { type: 'string' } } } } }
           },
           400: { description: 'Missing jobId or filePath' },
           404: { description: 'Video file not found' }
@@ -127,13 +136,19 @@ const swaggerDocument = {
             content: {
               'application/json': {
                 schema: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'string', description: 'Unique ID for the reciter' },
-                      name: { type: 'string', description: 'Full name of the reciter' }
-                    }
+                  type: 'object',
+                  properties: {
+                    reciters: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string', description: 'Unique ID for the reciter' },
+                          name: { type: 'string', description: 'Full name of the reciter' }
+                        }
+                      }
+                    },
+                    poweredBy: { type: 'string' }
                   }
                 }
               }
@@ -153,20 +168,26 @@ const swaggerDocument = {
             content: {
               'application/json': {
                 schema: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'number' },
-                      revelation_place: { type: 'string' },
-                      revelation_order: { type: 'number' },
-                      bismillah_pre: { type: 'boolean' },
-                      name_simple: { type: 'string' },
-                      name_complex: { type: 'string' },
-                      name_arabic: { type: 'string' },
-                      verses_count: { type: 'number' },
-                      pages: { type: 'array', items: { type: 'number' } }
-                    }
+                  type: 'object',
+                  properties: {
+                    surahs: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'number' },
+                          revelation_place: { type: 'string' },
+                          revelation_order: { type: 'number' },
+                          bismillah_pre: { type: 'boolean' },
+                          name_simple: { type: 'string' },
+                          name_complex: { type: 'string' },
+                          name_arabic: { type: 'string' },
+                          verses_count: { type: 'number' },
+                          pages: { type: 'array', items: { type: 'number' } }
+                        }
+                      }
+                    },
+                    poweredBy: { type: 'string' }
                   }
                 }
               }
