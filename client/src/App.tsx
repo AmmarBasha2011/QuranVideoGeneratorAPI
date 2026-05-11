@@ -24,8 +24,8 @@ function App() {
   const [endAyah, setEndAyah] = useState(7);
   const [resolution] = useState('1080x1920');
   const [fps, setFps] = useState(30);
-  const [bgColor] = useState('#000000');
-  const [textColor, setTextColor] = useState('#ffffff');
+  const [bgColor] = useState('#050a18');
+  const [textColor, setTextColor] = useState('#00f2ff');
   
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('idle');
@@ -119,9 +119,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050a18] text-slate-100 p-4 md:p-8 font-sans selection:bg-blue-500/30 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#050a18] text-slate-100 p-4 md:p-8 font-sans selection:bg-[#00f2ff]/30 relative overflow-x-hidden">
       {/* Active Tasks Panel */}
-      <div className={`fixed inset-y-0 left-0 w-80 bg-slate-900/95 backdrop-blur-2xl border-r border-white/5 z-50 transform transition-transform duration-500 ease-in-out shadow-2xl ${showTasksPanel ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 w-80 bg-[#050a18]/95 backdrop-blur-2xl border-r border-[#00f2ff]/10 z-50 transform transition-transform duration-500 ease-in-out shadow-2xl ${showTasksPanel ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 h-full flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
@@ -212,7 +212,7 @@ function App() {
             <div className="absolute top-0 right-0 p-8 -mr-8 -mt-8 bg-blue-600/5 blur-3xl w-32 h-32 rounded-full" />
             
             <section className="space-y-6 relative">
-              <div className="flex items-center gap-3 text-blue-400 font-bold tracking-wide uppercase text-xs">
+              <div className="flex items-center gap-3 text-[#00f2ff] font-bold tracking-wide uppercase text-xs">
                 <Music className="w-4 h-4" />
                 <span>Recitation Settings</span>
               </div>
@@ -221,7 +221,7 @@ function App() {
                 <label className="text-sm text-slate-400 font-medium ml-1">Reciter</label>
                 <div className="relative">
                   <select
-                    className="w-full bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all appearance-none cursor-pointer"
+                    className="w-full bg-[#0a1124]/80 border border-slate-800 hover:border-[#00f2ff]/50 rounded-2xl px-4 py-4 focus:ring-2 focus:ring-[#00f2ff]/40 outline-none transition-all appearance-none cursor-pointer"
                     value={selectedReciter}
                     onChange={(e) => setSelectedReciter(e.target.value)}
                   >
@@ -319,7 +319,7 @@ function App() {
             <button
               onClick={handleGenerate}
               disabled={!selectedReciter || status === 'started' || status === 'pending'}
-              className="mt-8 w-full relative group overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 disabled:from-slate-800 disabled:to-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-xl shadow-blue-900/20"
+              className="mt-8 w-full relative group overflow-hidden bg-gradient-to-r from-[#00f2ff] to-[#4d4dff] hover:from-[#00d1dc] hover:to-[#3b3bff] disabled:from-slate-800 disabled:to-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-[#050a18] font-bold py-5 px-6 rounded-2xl transition-all shadow-xl shadow-[#00f2ff]/20"
             >
               <div className="relative z-10 flex items-center justify-center gap-3">
                 {status === 'started' || status === 'pending' ? (

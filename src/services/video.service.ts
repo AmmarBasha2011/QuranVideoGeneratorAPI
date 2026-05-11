@@ -11,7 +11,11 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import ffprobeStatic from 'ffprobe-static';
+import ffmpegStatic from 'ffmpeg-static';
 
+if (ffmpegStatic) {
+    ffmpeg.setFfmpegPath(ffmpegStatic);
+}
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 interface VideoRequest {
@@ -46,6 +50,21 @@ const getFontPath = () => {
 };
 
 const FONT_PATH = getFontPath();
+
+// INEX Style Constants
+const BRAND_COLORS = {
+    DEEP_NAVY: '#050a18',
+    ELECTRIC_CYAN: '#00f2ff',
+    NEON_BLUE: '#4d4dff'
+};
+
+// ASS Color conversion (RRGGBB -> &HAABBGGRR)
+const toASSColor = (hex: string) => {
+    const r = hex.substring(1, 3);
+    const g = hex.substring(3, 5);
+    const b = hex.substring(5, 7);
+    return `&H00${b}${g}${r}`;
+};
 
 const escapeFFmpegText = (text: string) => {
     return text
@@ -91,24 +110,38 @@ export const processVideo = async (
 
   try {
     onProgress(5);
-    // 1. Download Audio and get timings
-    const audioFiles: string[] = [];
-    const ayahData: { text: string; start: number; end: number }[] = [];
-    let currentTime = 0;
+    // 1. Download Audio and get timings (Parallelized)
+    const ayahs = Array.from({ length: endAyah - startAyah + 1 }, (_, i) => startAyah + i);
 
-    for (let i = startAyah; i <= endAyah; i++) {
+    const ayahResults = await Promise.all(ayahs.map(async (ayah) => {
       const surahStr = surah.toString().padStart(3, '0');
-      const ayahStr = i.toString().padStart(3, '0');
-      const audioUrl = `https://everyayah.com/data/${reciter}/${surahStr}${ayahStr}.mp3`;
+      const ayahStr = ayah.toString().padStart(3, '0');
       const audioPath = path.join(tempDir, `${surahStr}${ayahStr}.mp3`);
       
-      const response = await axios.get(audioUrl, { responseType: 'stream' });
-      const writer = fs.createWriteStream(audioPath);
-      response.data.pipe(writer);
-      await new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-      });
+      // Fallback mechanism for audio
+      const audioSources = [
+        `https://everyayah.com/data/${reciter}/${surahStr}${ayahStr}.mp3`,
+        `https://verses.quran.com/${reciter.split('_')[0]}/mp3/${surahStr}${ayahStr}.mp3` // Heuristic fallback
+      ];
+
+      let downloaded = false;
+      for (const source of audioSources) {
+        try {
+          const response = await axios.get(source, { responseType: 'stream', timeout: 10000 });
+          const writer = fs.createWriteStream(audioPath);
+          response.data.pipe(writer);
+          await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+          });
+          downloaded = true;
+          break;
+        } catch (e) {
+          console.warn(`Failed to download from ${source}, trying next...`);
+        }
+      }
+
+      if (!downloaded) throw new Error(`Failed to download audio for Ayah ${ayah}`);
 
       // Get duration
       let duration = 0;
@@ -122,7 +155,7 @@ export const processVideo = async (
       // Fetch translation
       let translation = "";
       try {
-        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_key/${surah}:${i}?translations=20`);
+        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_key/${surah}:${ayah}?translations=20`);
         if (res.data.verse.translations?.length > 0) {
           translation = res.data.verse.translations[0].text.replace(/<[^>]*>?/gm, ''); 
         }
@@ -130,14 +163,21 @@ export const processVideo = async (
           translation = "[Translation not available]";
       }
 
+      return { ayah, audioPath, duration, translation };
+    }));
+
+    const audioFiles: string[] = [];
+    const ayahData: { text: string; start: number; end: number }[] = [];
+    let currentTime = 0;
+
+    for (const res of ayahResults) {
       ayahData.push({
-          text: `(${i}) ${translation}`,
-          start: currentTime,
-          end: currentTime + duration
+        text: `(${res.ayah}) ${res.translation}`,
+        start: currentTime,
+        end: currentTime + res.duration
       });
-      
-      currentTime += duration;
-      audioFiles.push(audioPath);
+      currentTime += res.duration;
+      audioFiles.push(res.audioPath);
     }
 
     onProgress(35);
@@ -154,6 +194,37 @@ export const processVideo = async (
     onProgress(50);
     const [width, height] = resolution.split('x').map(Number);
     
+    // 3. Generate ASS subtitles (Workaround for missing drawtext)
+    const assPath = path.join(tempDir, 'subtitles.ass');
+    const formatTime = (s: number) => {
+        const ms = Math.floor((s % 1) * 100);
+        const sec = Math.floor(s % 60);
+        const min = Math.floor((s / 60) % 60);
+        const hr = Math.floor(s / 3600);
+        return `${hr}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+    };
+
+    const assContent = `[Script Info]
+ScriptType: v4.00+
+PlayResX: ${width}
+PlayResY: ${height}
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Watermark,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},35,&H80FFFFFF,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,8,10,10,50,1
+Style: SurahName,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},75,${toASSColor(BRAND_COLORS.ELECTRIC_CYAN)},&H00000000,${toASSColor(BRAND_COLORS.NEON_BLUE)},&H80000000,1,0,0,0,100,100,2,0,1,3,3,8,10,10,200,1
+Style: ReciterName,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},40,&H33FFFFFF,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,2,10,10,150,1
+Style: AyahText,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},52,&H00FFFFFF,&H00000000,${toASSColor(BRAND_COLORS.ELECTRIC_CYAN)},&H80000000,1,0,0,0,100,100,0,0,1,2,3,5,50,50,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,${formatTime(currentTime)},Watermark,,0,0,0,,INEX Team
+Dialogue: 0,0:00:00.00,${formatTime(currentTime)},SurahName,,0,0,0,,${surahName.toUpperCase()}
+Dialogue: 0,0:00:00.00,${formatTime(currentTime)},ReciterName,,0,0,0,,Reciter: ${reciterName}
+${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},AyahText,,0,0,0,,${a.text.replace(/\n/g, '\\N')}`).join('\n')}
+`;
+    fs.writeFileSync(assPath, assContent);
+
     // Create filters array
     const filters: any[] = [
         {
@@ -164,62 +235,30 @@ export const processVideo = async (
             filter: 'crop',
             options: `${width}:${height}`
         },
+        // INEX Style Background Overlay (Deep Navy)
         {
             filter: 'drawbox',
             options: {
                 x: 0, y: 'ih/4', w: 'iw', h: 'ih/2',
-                color: 'black@0.6',
+                color: `${BRAND_COLORS.DEEP_NAVY}@0.7`,
                 t: 'fill'
             }
         },
-        // Static Header: Surah Name
+        // Glassmorphism Border (Electric Cyan)
         {
-            filter: 'drawtext',
+            filter: 'drawbox',
             options: {
-              text: escapeFFmpegText(surahName.toUpperCase()),
-              fontsize: 70,
-              fontcolor: 'white',
-              ...(FONT_PATH ? { fontfile: FONT_PATH } : {}),
-              x: '(w-text_w)/2',
-              y: 'h/8',
-              shadowcolor: 'black@0.8',
-              shadowx: 4,
-              shadowy: 4
+                x: 'iw*0.05', y: 'ih/4', w: 'iw*0.9', h: 'ih/2',
+                color: `${BRAND_COLORS.ELECTRIC_CYAN}@0.3`,
+                t: 2
             }
         },
-        // Static Footer: Reciter Name
+        // Subtitles Filter (Watermark, Headers, Ayahs)
         {
-            filter: 'drawtext',
-            options: {
-              text: escapeFFmpegText(`Reciter: ${reciterName}`),
-              fontsize: 40,
-              fontcolor: 'white',
-              ...(FONT_PATH ? { fontfile: FONT_PATH } : {}),
-              x: '(w-text_w)/2',
-              y: 'h - h/8',
-              alpha: 0.9
-            }
+            filter: 'ass',
+            options: assPath
         }
     ];
-
-    // Dynamic Ayah Overlays
-    ayahData.forEach(ayah => {
-        filters.push({
-            filter: 'drawtext',
-            options: {
-                text: escapeFFmpegText(wrapText(ayah.text, 28)),
-                fontsize: 45,
-                fontcolor: 'white',
-                ...(FONT_PATH ? { fontfile: FONT_PATH } : {}),
-                x: '(w-text_w)/2',
-                y: '(h-text_h)/2',
-                shadowcolor: 'black@0.9',
-                shadowx: 2,
-                shadowy: 2,
-                enable: `between(t,${ayah.start},${ayah.end})`
-            }
-        });
-    });
 
     return new Promise((resolve, reject) => {
       const command = ffmpeg()

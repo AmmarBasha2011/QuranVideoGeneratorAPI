@@ -63,5 +63,8 @@ export const RECITERS: Reciter[] = [
   { id: 'warsh/warsh_ibrahim_aldosary_128kbps', name: 'Ibrahim Al-Dosary (Warsh)' },
   { id: 'warsh/warsh_yassin_al_jazaery_64kbps', name: 'Yassin Al-Jazaery (Warsh)' },
   { id: 'warsh/warsh_Abdul_Basit_128kbps', name: 'Abdul Basit (Warsh)' },
-  { id: 'Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com', name: 'Ahmed Al-Ajamy (Low)' }
+  { id: 'Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com', name: 'Ahmed Al-Ajamy (Low)' },
+  { id: 'Nabil_Rifa3i_48kbps', name: 'Nabil Ar-Rifa\'i' },
+  { id: 'Abdullah_Basfar_64kbps', name: 'Abdullah Basfar (64kbps)' },
+  { id: 'Alafasy_64kbps', name: 'Mishary Rashid Alafasy (64kbps)' }
 ];
