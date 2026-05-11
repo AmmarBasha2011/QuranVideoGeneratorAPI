@@ -51,11 +51,12 @@ const getFontPath = () => {
 
 const FONT_PATH = getFontPath();
 
-// INEX Style Constants
+// Calm Style Constants
 const BRAND_COLORS = {
-    DEEP_NAVY: '#050a18',
-    ELECTRIC_CYAN: '#00f2ff',
-    NEON_BLUE: '#4d4dff'
+    CREAM: '#F5F5DC',
+    GOLD: '#D4AF37',
+    SOFT_BLUE: '#A8DADC',
+    DEEP_NAVY: '#050a18'
 };
 
 // ASS Color conversion (RRGGBB -> &HAABBGGRR)
@@ -103,8 +104,17 @@ export const processVideo = async (
   const outputDir = path.join(__dirname, '../../outputs');
   const outputFile = path.join(outputDir, `${jobId}.mp4`);
   
-  // Use ONLY the provided background
-  const bgImagePath = path.join(__dirname, '../../free-photo-of-holy-quran-under-sunlight.webp');
+  // Select random background
+  const bgDir = path.join(__dirname, '../../assets/backgrounds');
+  let bgImagePath = path.join(__dirname, '../../free-photo-of-holy-quran-under-sunlight.webp');
+
+  if (fs.existsSync(bgDir)) {
+      const bgs = fs.readdirSync(bgDir).filter(f => f.endsWith('.jpg') || f.endsWith('.webp') || f.endsWith('.png'));
+      if (bgs.length > 0) {
+          const randomBg = bgs[Math.floor(Math.random() * bgs.length)];
+          bgImagePath = path.join(bgDir, randomBg);
+      }
+  }
 
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
@@ -212,16 +222,16 @@ PlayResY: ${height}
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Watermark,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},35,&H80FFFFFF,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,8,10,10,50,1
-Style: SurahName,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},75,${toASSColor(BRAND_COLORS.ELECTRIC_CYAN)},&H00000000,${toASSColor(BRAND_COLORS.NEON_BLUE)},&H80000000,1,0,0,0,100,100,2,0,1,3,3,8,10,10,200,1
-Style: ReciterName,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},40,&H33FFFFFF,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,2,10,10,150,1
-Style: AyahText,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},52,&H00FFFFFF,&H00000000,${toASSColor(BRAND_COLORS.ELECTRIC_CYAN)},&H80000000,1,0,0,0,100,100,0,0,1,2,3,5,50,50,10,1
+Style: SurahName,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},75,${toASSColor(BRAND_COLORS.GOLD)},&H00000000,&H00000000,&H80000000,1,0,0,0,100,100,2,0,1,1,2,8,10,10,200,1
+Style: ReciterName,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},40,&H4DFFFFFF,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,2,10,10,150,1
+Style: AyahText,${FONT_PATH ? path.basename(FONT_PATH, '.ttf') : 'sans-serif'},52,${toASSColor(BRAND_COLORS.CREAM)},&H00000000,${toASSColor(BRAND_COLORS.GOLD)},&H80000000,1,0,0,0,100,100,0,0,1,1,2,5,50,50,10,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,${formatTime(currentTime)},Watermark,,0,0,0,,INEX Team
-Dialogue: 0,0:00:00.00,${formatTime(currentTime)},SurahName,,0,0,0,,${surahName.toUpperCase()}
-Dialogue: 0,0:00:00.00,${formatTime(currentTime)},ReciterName,,0,0,0,,Reciter: ${reciterName}
-${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},AyahText,,0,0,0,,${a.text.replace(/\n/g, '\\N')}`).join('\n')}
+Dialogue: 0,0:00:00.00,${formatTime(currentTime)},Watermark,,0,0,0,,{\\fad(500,500)}INEX Team
+Dialogue: 0,0:00:00.00,${formatTime(currentTime)},SurahName,,0,0,0,,{\\fad(1000,1000)}${surahName.toUpperCase()}
+Dialogue: 0,0:00:00.00,${formatTime(currentTime)},ReciterName,,0,0,0,,{\\fad(1000,1000)}Reciter: ${reciterName}
+${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},AyahText,,0,0,0,,{\\fad(400,400)}${a.text.replace(/\n/g, '\\N')}`).join('\n')}
 `;
     fs.writeFileSync(assPath, assContent);
 
@@ -229,11 +239,18 @@ ${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},Aya
     const filters: any[] = [
         {
             filter: 'scale',
-            options: `${width}:${height}:force_original_aspect_ratio=increase`
+            options: `${width*2}:${height*2}` // Double scale for zoompan quality
         },
         {
-            filter: 'crop',
-            options: `${width}:${height}`
+          filter: 'zoompan',
+          options: {
+            z: 'min(zoom+0.0008,1.5)',
+            x: 'iw/2-(iw/zoom)/2',
+            y: 'ih/2-(ih/zoom)/2',
+            d: currentTime * 25, // Assuming 25fps for duration
+            s: `${width}x${height}`,
+            fps: 25
+          }
         },
         // INEX Style Background Overlay (Deep Navy)
         {
@@ -244,12 +261,12 @@ ${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},Aya
                 t: 'fill'
             }
         },
-        // Glassmorphism Border (Electric Cyan)
+        // Glassmorphism Border (Gold)
         {
             filter: 'drawbox',
             options: {
                 x: 'iw*0.05', y: 'ih/4', w: 'iw*0.9', h: 'ih/2',
-                color: `${BRAND_COLORS.ELECTRIC_CYAN}@0.3`,
+                color: `${BRAND_COLORS.GOLD}@0.2`,
                 t: 2
             }
         },
