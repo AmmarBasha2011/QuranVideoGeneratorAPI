@@ -104,17 +104,19 @@ export const processVideo = async (
   const outputDir = path.join(__dirname, '../../outputs');
   const outputFile = path.join(outputDir, `${jobId}.mp4`);
   
-  // Select random background
+  // Select backgrounds
   const bgDir = path.join(__dirname, '../../assets/backgrounds');
-  let bgImagePath = path.join(__dirname, '../../free-photo-of-holy-quran-under-sunlight.webp');
+  let backgrounds: string[] = [path.join(__dirname, '../../free-photo-of-holy-quran-under-sunlight.webp')];
 
   if (fs.existsSync(bgDir)) {
-      const bgs = fs.readdirSync(bgDir).filter(f => f.endsWith('.jpg') || f.endsWith('.webp') || f.endsWith('.png'));
-      if (bgs.length > 0) {
-          const randomBg = bgs[Math.floor(Math.random() * bgs.length)];
-          bgImagePath = path.join(bgDir, randomBg);
+      const files = fs.readdirSync(bgDir).filter(f => f.endsWith('.jpg') || f.endsWith('.webp') || f.endsWith('.png'));
+      if (files.length > 0) {
+          backgrounds = files.map(f => path.join(bgDir, f));
       }
   }
+
+  // Shuffle backgrounds for random order
+  backgrounds = backgrounds.sort(() => Math.random() - 0.5);
 
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
@@ -231,57 +233,99 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Dialogue: 0,0:00:00.00,${formatTime(currentTime)},Watermark,,0,0,0,,{\\fad(500,500)}INEX Team
 Dialogue: 0,0:00:00.00,${formatTime(currentTime)},SurahName,,0,0,0,,{\\fad(1000,1000)}${surahName.toUpperCase()}
 Dialogue: 0,0:00:00.00,${formatTime(currentTime)},ReciterName,,0,0,0,,{\\fad(1000,1000)}Reciter: ${reciterName}
-${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},AyahText,,0,0,0,,{\\fad(400,400)}${a.text.replace(/\n/g, '\\N')}`).join('\n')}
+${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},AyahText,,0,0,0,,{\\fad(400,400)}${wrapText(a.text, 35).replace(/\n/g, '\\N')}`).join('\n')}
 `;
     fs.writeFileSync(assPath, assContent);
 
+    // Multiple inputs handling for background switching every 5s
+    const bgSwitchInterval = 5;
+    const numBgsNeeded = Math.ceil(currentTime / bgSwitchInterval);
+    const selectedBgs = Array.from({ length: numBgsNeeded }, (_, i) => backgrounds[i % backgrounds.length]);
+
     // Create filters array
-    const filters: any[] = [
-        {
+    const filters: any[] = [];
+
+    // Scale and animate each background input
+    selectedBgs.forEach((_, index) => {
+        const start = index * bgSwitchInterval;
+        const end = Math.min((index + 1) * bgSwitchInterval, currentTime);
+        const duration = end - start;
+
+        filters.push({
             filter: 'scale',
-            options: `${width*2}:${height*2}` // Double scale for zoompan quality
-        },
-        {
-          filter: 'zoompan',
-          options: {
-            z: 'min(zoom+0.0008,1.5)',
-            x: 'iw/2-(iw/zoom)/2',
-            y: 'ih/2-(ih/zoom)/2',
-            d: currentTime * 25, // Assuming 25fps for duration
-            s: `${width}x${height}`,
-            fps: 25
-          }
-        },
-        // INEX Style Background Overlay (Deep Navy)
-        {
-            filter: 'drawbox',
+            options: `${width*2}:${height*2}`,
+            inputs: [`${index}:v`],
+            outputs: [`bg${index}`]
+        });
+
+        filters.push({
+            filter: 'zoompan',
             options: {
-                x: 0, y: 'ih/4', w: 'iw', h: 'ih/2',
-                color: `${BRAND_COLORS.DEEP_NAVY}@0.7`,
-                t: 'fill'
-            }
-        },
-        // Glassmorphism Border (Gold)
-        {
-            filter: 'drawbox',
+                z: 'min(zoom+0.001,1.5)',
+                x: 'iw/2-(iw/zoom)/2',
+                y: 'ih/2-(ih/zoom)/2',
+                d: duration * 25,
+                s: `${width}x${height}`,
+                fps: 25
+            },
+            inputs: [`bg${index}`],
+            outputs: [`animated_bg${index}`]
+        });
+    });
+
+    // Concatenate/Overlay animated backgrounds
+    let lastOutput = `animated_bg0`;
+    for (let i = 1; i < selectedBgs.length; i++) {
+        const nextOutput = `merged_bg${i}`;
+        filters.push({
+            filter: 'overlay',
             options: {
-                x: 'iw*0.05', y: 'ih/4', w: 'iw*0.9', h: 'ih/2',
-                color: `${BRAND_COLORS.GOLD}@0.2`,
-                t: 2
-            }
+                enable: `gte(t,${i * bgSwitchInterval})`
+            },
+            inputs: [lastOutput, `animated_bg${i}`],
+            outputs: [nextOutput]
+        });
+        lastOutput = nextOutput;
+    }
+
+    // Add remaining filters using lastOutput as input
+    filters.push({
+        filter: 'drawbox',
+        options: {
+            x: 0, y: 'ih/4', w: 'iw', h: 'ih/2',
+            color: `${BRAND_COLORS.DEEP_NAVY}@0.7`,
+            t: 'fill'
         },
-        // Subtitles Filter (Watermark, Headers, Ayahs)
-        {
-            filter: 'ass',
-            options: assPath
-        }
-    ];
+        inputs: [lastOutput],
+        outputs: ['bg_with_box']
+    });
+
+    filters.push({
+        filter: 'drawbox',
+        options: {
+            x: 'iw*0.05', y: 'ih/4', w: 'iw*0.9', h: 'ih/2',
+            color: `${BRAND_COLORS.GOLD}@0.2`,
+            t: 2
+        },
+        inputs: ['bg_with_box'],
+        outputs: ['bg_with_border']
+    });
+
+    filters.push({
+        filter: 'ass',
+        options: assPath,
+        inputs: ['bg_with_border']
+    });
 
     return new Promise((resolve, reject) => {
-      const command = ffmpeg()
-        .input(bgImagePath)
-        .loop()
-        .input(concatenatedAudio)
+      const command = ffmpeg();
+
+      // Add each background as input
+      selectedBgs.forEach(bg => {
+          command.input(bg).loop();
+      });
+
+      command.input(concatenatedAudio)
         .outputOptions([
           '-c:v libx264',
           '-preset ultrafast',
@@ -291,7 +335,7 @@ ${ayahData.map(a => `Dialogue: 1,${formatTime(a.start)},${formatTime(a.end)},Aya
           '-pix_fmt yuv420p',
           '-shortest'
         ])
-        .videoFilters(filters)
+        .complexFilter(filters)
         .on('start', (cmd) => {
           console.log('FFmpeg started:', cmd);
         })
